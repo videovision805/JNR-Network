@@ -9,20 +9,25 @@ PURPLE='#1B1035'; GREEN='#3DFF9A'; LAV='#F7F5FC'; WHITE='#FFFFFF'; BLACK='#00000
 TRACK=int(os.environ.get('NNTRACK','10'))
 from fontTools.ttLib import TTFont as _T
 _f=_T(FF); CAP=_f['OS/2'].sCapHeight/_f['head'].unitsPerEm
-# ---- symbol: bold N, round caps, node holes (true transparency via mask)
-SW_=26; WID=96
-SYM_W=WID+SW_; SYM_H=100+SW_   # bbox 122 x 126
-HOLES=[(0,0),(WID,0),(0,100),(WID,100),(WID/2,50)]
-def symbol(color,holes=True,uid='h'):
-    m=''
+# ---- symbol: round badge, N drawn as a line with 4 nodes (cut out = true transparency)
+SYM_W=SYM_H=176
+NPATH='M70 138V62L130 138V62'
+NODES=[(70,138),(70,62),(130,138),(130,62)]
+def symbol(color,holes=True,uid='h',ncolor=None):
+    if ncolor:  # two-tone: solid badge + coloured N on top (light version)
+        return (f'<circle cx="100" cy="100" r="88" fill="{color}"/>'
+                f'<path d="{NPATH}" fill="none" stroke="{ncolor}" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>'
+                +''.join(f'<circle cx="{x}" cy="{y}" r="14" fill="{ncolor}"/>' for x,y in NODES))
     if holes:
-        m=(f'<mask id="{uid}" maskUnits="userSpaceOnUse" x="-30" y="-30" width="{WID+60}" height="160"><rect x="-30" y="-30" width="{WID+60}" height="160" fill="#fff"/><g fill="#000">'
-           +''.join(f'<circle cx="{x:g}" cy="{y:g}" r="7.5"/>' for x,y in HOLES)+'</g></mask>')
-    g=f'<g{" mask=\"url(#%s)\""%uid if holes else ""} fill="none" stroke="{color}" stroke-width="{SW_}" stroke-linecap="round" stroke-linejoin="round"><path d="M0 100V0M{WID} 0V100M0 0L{WID} 100"/></g>'
-    return (f'<defs>{m}</defs>' if m else '')+g
-def place_symbol(color,cx,cy,height,holes=True,uid='h'):
+        cut=(f'<path d="{NPATH}" fill="none" stroke="#000" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/>'
+             +''.join(f'<circle cx="{x}" cy="{y}" r="14" fill="#000"/>' for x,y in NODES))
+    else:  # simplified for 16-32 px: bold N, no nodes
+        cut=f'<path d="{NPATH}" fill="none" stroke="#000" stroke-width="24" stroke-linecap="round" stroke-linejoin="round"/>'
+    return (f'<defs><mask id="{uid}" maskUnits="userSpaceOnUse" x="0" y="0" width="200" height="200"><rect width="200" height="200" fill="#fff"/>{cut}</mask></defs>'
+            f'<circle cx="100" cy="100" r="88" fill="{color}" mask="url(#{uid})"/>')
+def place_symbol(color,cx,cy,height,holes=True,uid='h',ncolor=None):
     k=height/SYM_H
-    return f'<g transform="translate({cx-(WID/2)*k:g} {cy-50*k:g}) scale({k:g})">{symbol(color,holes,uid)}</g>'
+    return f'<g transform="translate({cx-100*k:g} {cy-100*k:g}) scale({k:g})">{symbol(color,holes,uid,ncolor)}</g>'
 def wordmark(text,color,cap_px,x,cy):
     size=cap_px/CAP
     d,w,c,xh=text_path(FF,text,TRACK,size)
@@ -30,21 +35,22 @@ def wordmark(text,color,cap_px,x,cy):
 def svg(w,h,body,bg=None,title='NetNex'):
     b=f'<rect width="{w:g}" height="{h:g}" fill="{bg}"/>' if bg else ''
     return f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {w:g} {h:g}" width="{w:g}" height="{h:g}"><title>{title}</title>{b}{body}</svg>\n'
-THEMES={'dark':(GREEN,WHITE,PURPLE),'light':(GREEN,PURPLE,LAV),'white':(WHITE,WHITE,None),'black':(BLACK,BLACK,None)}
+THEMES={'dark':(GREEN,WHITE,PURPLE),'light':(PURPLE,PURPLE,LAV),'white':(WHITE,WHITE,None),'black':(BLACK,BLACK,None)}
+NCOL={'light':GREEN}
 C=150  # cap height px
 def horizontal(text,theme):
-    sc,tc,bg=THEMES[theme]; P=1.25*C; hs=1.75*C; ws_=hs*SYM_W/SYM_H
+    sc,tc,bg=THEMES[theme]; P=1.25*C; hs=1.8*C; ws_=hs*SYM_W/SYM_H
     gap=0.8*C
     _,tw=wordmark(text,tc,C,0,0)
     W=P+ws_+gap+tw+P; H=hs+2*P; cy=H/2
-    s=place_symbol(sc,P+ws_/2,cy,hs)
+    s=place_symbol(sc,P+ws_/2,cy,hs,ncolor=NCOL.get(theme))
     t,_=wordmark(text,tc,C,P+ws_+gap,cy)
     return svg(W,H,s+t,bg,text)
 def stacked(text,theme):
-    sc,tc,bg=THEMES[theme]; P=1.5*C; hs=3.0*C; ws_=hs*SYM_W/SYM_H; gap=0.95*C
+    sc,tc,bg=THEMES[theme]; P=1.5*C; hs=2.6*C; ws_=hs*SYM_W/SYM_H; gap=0.95*C
     _,tw=wordmark(text,tc,C,0,0)
     W=max(tw,ws_)+2*P; H=hs+gap+C+2*P
-    s=place_symbol(sc,W/2,P+hs/2,hs)
+    s=place_symbol(sc,W/2,P+hs/2,hs,ncolor=NCOL.get(theme))
     t,_=wordmark(text,tc,C,W/2-tw/2,P+hs+gap+C/2)
     return svg(W,H,s+t,bg,text)
 files={}
@@ -56,10 +62,10 @@ for p in ['BillNex','OLTNex','ISPNex']:
     files[f'{p.lower()}-horizontal-light']=horizontal(p,'light')
 S=512
 for name,col in [('green',GREEN),('white',WHITE),('black',BLACK),('purple',PURPLE)]:
-    files[f'netnex-symbol-{col and name}']=svg(S,S,place_symbol(col,S/2,S/2,330),None)
-files['netnex-app-icon-purple']=svg(S,S,f'<rect width="{S}" height="{S}" rx="116" fill="{PURPLE}"/>'+place_symbol(GREEN,S/2,S/2,290),None)
-files['netnex-app-icon-green']=svg(S,S,f'<rect width="{S}" height="{S}" rx="116" fill="{GREEN}"/>'+place_symbol(PURPLE,S/2,S/2,290),None)
-files['netnex-favicon-simple']=svg(S,S,f'<rect width="{S}" height="{S}" rx="116" fill="{PURPLE}"/>'+place_symbol(GREEN,S/2,S/2,300,holes=False),None)
+    files[f'netnex-symbol-{col and name}']=svg(S,S,place_symbol(col,S/2,S/2,380),None)
+files['netnex-app-icon-purple']=svg(S,S,f'<rect width="{S}" height="{S}" rx="116" fill="{PURPLE}"/>'+place_symbol(GREEN,S/2,S/2,330),None)
+files['netnex-app-icon-green']=svg(S,S,f'<rect width="{S}" height="{S}" rx="116" fill="{GREEN}"/>'+place_symbol(PURPLE,S/2,S/2,330),None)
+files['netnex-favicon-simple']=svg(S,S,place_symbol(GREEN,S/2,S/2,500,holes=False),None)
 for k,v in files.items():
     os.makedirs(OUT+'/svg',exist_ok=True); open(f'{OUT}/svg/{k}.svg','w').write(v)
 json.dump(list(files),open('/tmp/nn/names.json','w'))
