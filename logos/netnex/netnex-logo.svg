@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" width="1600" height="1000">
+  <title>NetNex</title>
+  <rect width="1600" height="1000" fill="#1B1035"/>
+  <!-- Symbol: N made of 4 connected nodes and one line -->
+  <g transform="translate(730 304) scale(1.4)">
+    <path d="M0 100 V0 L100 100 V0" fill="none" stroke="#3DFF9A" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+    <g fill="#3DFF9A">
+      <circle cx="0" cy="0" r="14"/><circle cx="0" cy="100" r="14"/>
+      <circle cx="100" cy="0" r="14"/><circle cx="100" cy="100" r="14"/>
+    </g>
+    <g fill="#1B1035">
+      <circle cx="0" cy="0" r="5"/><circle cx="0" cy="100" r="5"/>
+      <circle cx="100" cy="0" r="5"/><circle cx="100" cy="100" r="5"/>
+    </g>
+  </g>
+  <!-- Wordmark: geometric rounded strokes (no font needed) -->
+  <g transform="translate(463.4 564) scale(2.2)" fill="none" stroke="#FFFFFF" stroke-width="9" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M0 60 V0 L40 60 V0"/>
+    <path d="M54 38 H98 A22 22 0 1 0 92 53.6"/>
+    <path d="M126 4 V48 Q126 60 138 60 M114 20 H140"/>
+    <path d="M154 60 V0 L194 60 V0" transform="translate(0 0)"/>
+    <path d="M208 38 H252 A22 22 0 1 0 246 53.6"/>
+    <path d="M262 16 L306 60 M306 16 L262 60"/>
+  </g>
+</svg>
