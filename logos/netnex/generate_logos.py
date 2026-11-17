@@ -2,11 +2,13 @@ import os, json, sys
 sys.path.insert(0,'/tmp/nn')
 from fontpath import text_path
 OUT=os.environ.get('NNOUT',os.path.dirname(os.path.abspath(__file__)))
-FONT=os.environ.get('NNFONT','sora')
-FF=f'/tmp/nn/fonts/node_modules/@fontsource/{FONT}/files/{FONT}-latin-700-normal.woff'
+FONT=os.environ.get('NNFONT','poppins')
+WT=os.environ.get('NNWT','600')
+FF=f'/tmp/nn/fonts/node_modules/@fontsource/{FONT}/files/{FONT}-latin-{WT}-normal.woff'
 PURPLE='#1B1035'; GREEN='#3DFF9A'; LAV='#F7F5FC'; WHITE='#FFFFFF'; BLACK='#000000'
-TRACK={'sora':14,'outfit':20}[FONT]
-CAP={'sora':0.730,'outfit':0.706}[FONT]
+TRACK=int(os.environ.get('NNTRACK','10'))
+from fontTools.ttLib import TTFont as _T
+_f=_T(FF); CAP=_f['OS/2'].sCapHeight/_f['head'].unitsPerEm
 # ---- symbol: bold N, round caps, node holes (true transparency via mask)
 SW_=26; WID=96
 SYM_W=WID+SW_; SYM_H=100+SW_   # bbox 122 x 126
